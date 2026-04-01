@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Power Platform — multi-project workspace starter" />
+  <title>Power Platform</title>
+  <style>
+    /* ── Design tokens ─────────────────────────────────────────── */
+    :root {
+      --color-bg:          #0f1117;
+      --color-surface:     #1a1d27;
+      --color-border:      #2e3147;
+      --color-text:        #e2e8f0;
+      --color-text-muted:  #8892a4;
+      --color-accent:      #6366f1;
+      --color-accent-dim:  #4f52c8;
+      --color-success:     #22c55e;
+      --color-warning:     #f59e0b;
+      --color-error:       #ef4444;
+
+      --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "Cascadia Code", "Fira Code", "Consolas", monospace;
+
+      --radius:   0.5rem;
+      --radius-lg: 1rem;
+      --shadow:   0 4px 24px rgba(0, 0, 0, 0.4);
+
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+    }
+
+    /* Light mode override */
+    @media (prefers-color-scheme: light) {
+      :root {
+        --color-bg:         #f1f5f9;
+        --color-surface:    #ffffff;
+        --color-border:     #cbd5e1;
+        --color-text:       #0f172a;
+        --color-text-muted: #64748b;
+        --shadow:           0 4px 24px rgba(0, 0, 0, 0.08);
+      }
+    }
+
+    /* ── Reset ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Base ──────────────────────────────────────────────────── */
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.6;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Layout ────────────────────────────────────────────────── */
+    .container {
+      width: 100%;
+      max-width: 960px;
+      margin-inline: auto;
+      padding-inline: var(--space-4);
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    .site-header {
+      border-bottom: 1px solid var(--color-border);
+      padding-block: var(--space-4);
+    }
+
+    .site-header__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    .site-header__logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-accent);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .site-nav {
+      display: flex;
+      gap: var(--space-6);
+      list-style: none;
+    }
+
+    .site-nav__link {
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+
+    .site-nav__link:hover,
+    .site-nav__link:focus-visible {
+      color: var(--color-text);
+    }
+
+    /* ── Hero ──────────────────────────────────────────────────── */
+    .hero {
+      padding-block: var(--space-16) var(--space-12);
+      text-align: center;
+    }
+
+    .hero__eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+      padding: var(--space-1) var(--space-3);
+      border-radius: 999px;
+      margin-bottom: var(--space-4);
+    }
+
+    .hero__title {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-4);
+    }
+
+    .hero__subtitle {
+      font-size: 1.125rem;
+      color: var(--color-text-muted);
+      max-width: 52ch;
+      margin-inline: auto;
+      margin-bottom: var(--space-8);
+    }
+
+    .hero__actions {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ── Buttons ───────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-6);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:hover  { opacity: 0.88; }
+    .btn:active { transform: scale(0.97); }
+
+    .btn--primary {
+      background: var(--color-accent);
+      color: #fff;
+    }
+
+    .btn--secondary {
+      background: transparent;
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+    }
+
+    /* ── Cards ─────────────────────────────────────────────────── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: var(--space-4);
+      padding-bottom: var(--space-16);
+    }
+
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      box-shadow: var(--shadow);
+      transition: border-color 0.2s;
+    }
+
+    .card:hover { border-color: var(--color-accent); }
+
+    .card__icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-3);
+      display: block;
+    }
+
+    .card__title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+    }
+
+    .card__body {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+    }
+
+    .card__tag {
+      display: inline-block;
+      margin-top: var(--space-4);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--color-accent);
+      background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--space-1);
+    }
+
+    /* ── Status bar ────────────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-8);
+      flex-wrap: wrap;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+      padding-block: var(--space-4);
+      margin-bottom: var(--space-12);
+    }
+
+    .status-bar__item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+    }
+
+    .status-bar__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    .site-footer {
+      margin-top: auto;
+      border-top: 1px solid var(--color-border);
+      padding-block: var(--space-6);
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+    }
+
+    /* ── Focus visible (a11y) ──────────────────────────────────── */
+    :focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 3px;
+    }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .site-nav { gap: var(--space-4); }
+      .hero { padding-block: var(--space-12) var(--space-8); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ───────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="container">
+      <div class="site-header__inner">
+        <a href="/" class="site-header__logo">Power Platform</a>
+        <nav aria-label="Primary navigation">
+          <ul class="site-nav">
+            <li><a href="#projects" class="site-nav__link">Projects</a></li>
+            <li><a href="https://github.com" class="site-nav__link" rel="noopener noreferrer">GitHub</a></li>
+            <li><a href="../docs/" class="site-nav__link">Docs</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ── Hero ─────────────────────────────────────────────────── -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container">
+        <span class="hero__eyebrow">Multi-project workspace</span>
+        <h1 class="hero__title" id="hero-title">Python · Web · Arduino</h1>
+        <p class="hero__subtitle">
+          A unified workspace for building software, web experiences, and embedded firmware — with consistent conventions across every stack.
+        </p>
+        <div class="hero__actions">
+          <a href="#projects" class="btn btn--primary">Explore Projects</a>
+          <a href="../CLAUDE.md" class="btn btn--secondary">Read Conventions</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Status bar ────────────────────────────────────────────── -->
+    <div class="status-bar" role="status" aria-label="Workspace status">
+      <div class="status-bar__item">
+        <span class="status-bar__dot" aria-hidden="true"></span>
+        Python 3.10+
+      </div>
+      <div class="status-bar__item">
+        <span class="status-bar__dot" aria-hidden="true"></span>
+        Node / npm
+      </div>
+      <div class="status-bar__item">
+        <span class="status-bar__dot" aria-hidden="true"></span>
+        PlatformIO
+      </div>
+    </div>
+
+    <!-- ── Project cards ──────────────────────────────────────────── -->
+    <section id="projects" aria-labelledby="projects-title">
+      <div class="container">
+        <div class="cards">
+
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">🐍</span>
+            <h2 class="card__title">Python</h2>
+            <p class="card__body">
+              Scripts, packages, and services written in Python 3.10+. Enforced with <code>black</code>, <code>ruff</code>, and <code>mypy</code>. Tested with <code>pytest</code>.
+            </p>
+            <span class="card__tag">python/</span>
+          </article>
+
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">🌐</span>
+            <h2 class="card__title">Web</h2>
+            <p class="card__body">
+              Responsive HTML5 pages and JS apps. Semantic markup, BEM CSS, vanilla ES2020+. Audited with Lighthouse for performance and accessibility.
+            </p>
+            <span class="card__tag">web/</span>
+          </article>
+
+          <article class="card">
+            <span class="card__icon" aria-hidden="true">⚡</span>
+            <h2 class="card__title">Arduino / IoT</h2>
+            <p class="card__body">
+              Embedded firmware built with PlatformIO. Non-blocking <code>millis()</code> patterns, <code>DEBUG</code>-guarded serial output, and pinned library versions.
+            </p>
+            <span class="card__tag">arduino/</span>
+          </article>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>Power Platform workspace &mdash; follow conventions in <code>CLAUDE.md</code></p>
+    </div>
+  </footer>
+
+</body>
+</html>

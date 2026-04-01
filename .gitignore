@@ -1,0 +1,195 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#  .gitignore — Python · Node.js · Arduino/PlatformIO · Environment files
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+secrets.h
+!secrets.h.example
+
+# ── OS junk ──────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── Editor / IDE ──────────────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.code-workspace
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Python
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Byte-compiled / optimised
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+MANIFEST
+.eggs/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+
+# Installers
+*.whl
+
+# Unit test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+nosetests.xml
+pytest.ini.bak
+
+# Type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+.pyre/
+
+# Linting / formatting
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb~
+
+# PyInstaller
+*.spec
+
+# Translations
+*.mo
+*.pot
+
+# Django / Flask specifics (if used)
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+instance/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Rope
+.ropeproject
+
+# Profiling
+*.prof
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Node.js / Web
+# ══════════════════════════════════════════════════════════════════════════════
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build output
+dist/
+dist-ssr/
+.output/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+
+# Cache
+.cache/
+.parcel-cache/
+.turbo/
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# Test coverage
+coverage/
+lcov.info
+
+# Vite
+vite.config.js.timestamp-*
+
+# Optional lock files (keep one; ignore the others)
+# Uncomment the lines for lock files you do NOT use:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Storybook
+storybook-static/
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Arduino / PlatformIO / Embedded
+# ══════════════════════════════════════════════════════════════════════════════
+
+# PlatformIO build artefacts
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# Arduino IDE build temp folders (OS temp — not normally in repo, but be safe)
+/tmp/arduino*/
+/tmp/build*/
+
+# Compiled object files & binaries
+*.o
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+*.d
+
+# Arduino IDE export
+export/
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Logs & temporary files
+# ══════════════════════════════════════════════════════════════════════════════
+
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  Docs build output
+# ══════════════════════════════════════════════════════════════════════════════
+
+docs/_build/
+docs/site/
+site/
