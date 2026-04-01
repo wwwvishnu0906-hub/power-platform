@@ -293,6 +293,7 @@ bool buzzerMuted = false; unsigned long buzzerMuteEnd = 0;
 bool sdReady = false; char todayLogFile[32] = "", todayEvtFile[32] = "";
 int  dtYear = 2026, dtMonth = 3, dtDay = 25, dtHour = 12, dtMin = 0, dtSec = 0;
 unsigned long dtBaseMillis = 0;
+bool dtClockReset = false;  // set true after manual time update to re-latch clock origin
 char operatorID[16] = ""; int operatorIDLen = 0;
 
 #define UART_BUF_SIZE 1024
@@ -546,7 +547,11 @@ void updateCUSUM(int idx) {
 void updateSoftwareClock() {
   unsigned long elapsed = (millis() - dtBaseMillis) / 1000;
   static int origHour = -1, origMin = -1, origSec = -1, origDay = -1, origMonth = -1, origYear = -1;
-  if (origHour < 0) { origHour = dtHour; origMin = dtMin; origSec = dtSec; origDay = dtDay; origMonth = dtMonth; origYear = dtYear; }
+  if (origHour < 0 || dtClockReset) {
+    origHour = dtHour; origMin = dtMin; origSec = dtSec;
+    origDay = dtDay; origMonth = dtMonth; origYear = dtYear;
+    dtClockReset = false;
+  }
   unsigned long totalSec = (unsigned long)origHour * 3600 + origMin * 60 + origSec + elapsed;
   unsigned long days = totalSec / 86400; totalSec %= 86400;
   int h = totalSec / 3600, m = (totalSec % 3600) / 60, s = totalSec % 60;
@@ -813,9 +818,15 @@ void parseSensorPacket(const char* line) {
           else s.avgLeakage += 0.05f * (lk - s.avgLeakage);
         }
 
-        // NEW: Over/Under voltage event counting (Category 1)
-        if (s.ch[0].V > 26.0f) s.ovVoltCount++;
-        if (s.ch[0].V > 1.0f && s.ch[0].V < 18.0f) s.uvVoltCount++;
+        // NEW: Over/Under voltage event counting (Category 1) — edge-triggered
+        static bool prevOv[4] = {false,false,false,false};
+        static bool prevUv[4] = {false,false,false,false};
+        bool nowOv = (s.ch[0].V > 26.0f);
+        bool nowUv = (s.ch[0].V > 1.0f && s.ch[0].V < 18.0f);
+        if (nowOv  && !prevOv[idx]) s.ovVoltCount++;
+        if (nowUv  && !prevUv[idx]) s.uvVoltCount++;
+        prevOv[idx] = nowOv;
+        prevUv[idx] = nowUv;
       }
     }
 
@@ -865,8 +876,8 @@ void parseLimitPacket(const char* line) {
   if (sscanf(line, "$L,%d,%lu,%lu,%d,%lu,%lu,%d,%lu,%lu,%d", &id, &rtMin, &rtMax, &rtCnt, &stMin, &stMax, &stCnt, &ftMin, &ftMax, &ftCnt) == 10 && id >= 1 && id <= 4) {
     int idx = id - 1;
     sData[idx].alarms[0] = { (float)rtMin, (float)rtMax, (uint8_t)rtCnt, 0 };
-    sData[idx].alarms[2] = { (float)stMin, (float)stMax, (uint8_t)stCnt, 0 };
-    sData[idx].alarms[1] = { (float)ftMin, (float)ftMax, (uint8_t)ftCnt, 0 };
+    sData[idx].alarms[1] = { (float)stMin, (float)stMax, (uint8_t)stCnt, 0 };
+    sData[idx].alarms[2] = { (float)ftMin, (float)ftMax, (uint8_t)ftCnt, 0 };
   }
 }
 
@@ -3169,6 +3180,7 @@ void runLoginAndDateTimeSetup() {
           dtDay = fieldValues[0]; dtMonth = fieldValues[1]; dtYear = fieldValues[2];
           dtHour = fieldValues[3]; dtMin = fieldValues[4]; dtSec = fieldValues[5];
           dtBaseMillis = millis();
+          dtClockReset = true;  // re-latch origin statics in updateSoftwareClock()
           canvas.fillRect(btnX2, startY, btnW2, btnH2, C_VOLT_GREEN);
           canvas.setTextColor(C_VOID, C_VOLT_GREEN);
           canvas.setTextDatum(middle_center);

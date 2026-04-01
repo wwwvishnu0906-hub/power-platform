@@ -6,6 +6,43 @@ All timestamps are in ISO 8601 format (YYYY-MM-DD). Entries are appended chronol
 
 ---
 
+## 2026-04-01 — Bug Fixes: VIPx3X4s (7 bugs)
+
+**Files modified:**
+- `arduino/VIPx3X4s/VIPx3X4s_circuit_final_F1.ino` — Bugs #1, #5, #6, #7
+- `arduino/VIPx3X4s/VIPx3X4s_display_final__F1s.ino` — Bugs #2, #3, #4
+
+### Fix #2 (HIGH) — ST/FT alarm index swap — `display parseLimitPacket()` L867
+`$L` packet maps RT=type0, ST=type1, FT=type2. Display had `alarms[1]=FT` and `alarms[2]=ST`, swapping Stable and Fall Time alarm thresholds silently.
+```
+BEFORE: alarms[2] = ST limits;  alarms[1] = FT limits;
+AFTER:  alarms[1] = ST limits;  alarms[2] = FT limits;
+```
+
+### Fix #3 (MEDIUM) — OV/UV counters edge-triggered — `display parseSensorPacket()` L817
+Counters incremented every 500ms `$S` packet while fault was active (level-triggered). A 10s over-voltage event generated 20 counts. Changed to only count on LOW→HIGH transition using `static bool prevOv[4]` and `prevUv[4]`.
+
+### Fix #6 (MEDIUM) — Inverted sensor VFLOOR stage — `circuit processSignal()` L559
+Inverted sensor path (PNP-NC/NPN-NO) unconditionally set `STAGE_NOSIG`, preventing `STAGE_VFLOOR` from ever being entered. Leakage detection (Category 3) was therefore disabled for all inverted sensor types. Added same `NO_SIG_V` threshold check as the normal path.
+```
+BEFORE: t.stage = STAGE_NOSIG;
+AFTER:  t.stage = (v <= NO_SIG_V) ? STAGE_NOSIG : STAGE_VFLOOR;
+```
+
+### Fix #1 (MEDIUM) — `dispConn` timeout / `lastContact` circular dependency — `circuit readDisplayUART()` L984
+`dispConn = true` was set on every received byte but never cleared. `lastContact` was only updated inside `neoUpdate()` when `dispConn` was already true — circular: once any byte arrived, `dispConn` stayed true forever and `lastContact` never timed out. Fixed by: (1) moving `lastContact = millis()` into `readDisplayUART()` so it is updated on actual byte receipt, (2) deriving `dispConn` from the 5s timeout in `neoUpdate()` rather than from the UART loop.
+
+### Fix #4 (LOW) — Display software clock reset — `display updateSoftwareClock()` L548
+Static origin variables (`origHour` etc.) latched on first call and never updated after manual time set. Added global `bool dtClockReset = false;` flag. SET button handler now sets `dtClockReset = true` after updating `dtBaseMillis`. `updateSoftwareClock()` re-latches origin statics when `dtClockReset` is set (mirrors circuit's `clkReset` pattern).
+
+### Fix #5 (LOW) — `neoRainbow()` setup-only guard — `circuit` L680
+Function used blocking `delay(120/300ms)` with no guard against runtime calls. Added comment and `configASSERT(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)` — asserts at the FreeRTOS level if called after scheduler starts. Compiles away in production builds where `configASSERT` is undefined.
+
+### Fix #7 (LOW) — `$STAT,0` explicit before `$STAT,sid` — `circuit handleCmd()` L937
+`$STAT,0` was reachable only because `sscanf("$STAT,0", "$STAT,%d", &sid)` parsed `sid=0`, failed the `sid>=1` bounds check, and accidentally fell through to the `strncmp` handler. Reordered: `$STAT,0` (strncmp) is now checked first, `$STAT,sid` (sscanf) is checked second — logic is now explicit and independent of sscanf fall-through.
+
+---
+
 ## 2026-04-01 — Import: VIPx3X4s Arduino Project
 
 **Source path:** `C:\Users\wwwvi\OneDrive\Desktop\VIPx3X4s\`

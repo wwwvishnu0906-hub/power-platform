@@ -556,7 +556,7 @@ static void processSignal(uint8_t i, float v, float c_mA) {
         t.avgLeakage_mA = (t.avgLeakage_mA == 0.0f) ? c_mA
                         : t.avgLeakage_mA + 0.05f * (c_mA - t.avgLeakage_mA);
 
-        t.stage = STAGE_NOSIG;
+        t.stage = (v <= NO_SIG_V) ? STAGE_NOSIG : STAGE_VFLOOR;
         if (v < tUp) {
           t.stage      = STAGE_RISING;
           t.t_rise_us  = now;
@@ -677,7 +677,10 @@ static void neoSet(uint8_t r, uint8_t g, uint8_t b) {
 }
 static void neoOff() { neopixelWrite(NEO_PIN, 0, 0, 0); }
 
+// NOTE: setup()-only — uses delay() intentionally for boot cinematic sequencing.
+// Must never be called after FreeRTOS tasks have started (would starve Core 0).
 static void neoRainbow() {
+  configASSERT(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED);
   const uint8_t cols[7][3] = {
     {255,0,0},{255,127,0},{255,255,0},
     {0,255,0},{0,0,255},{75,0,130},{148,0,211}
@@ -694,8 +697,10 @@ static void neoUpdate() {
   bool anyOn = chipOnline[0]||chipOnline[1]||chipOnline[2]||chipOnline[3];
   bool allOn = chipOnline[0]&&chipOnline[1]&&chipOnline[2]&&chipOnline[3];
 
+  // dispConn is now derived from lastContact timeout (set by readDisplayUART)
+  dispConn = (lastContact > 0 && (now - lastContact) < 5000);
+
   if (dispConn) {
-    lastContact = now;
     if (allOn) {
       neoSet(0, 180, 0);                       // solid green  = all OK + display
     } else if (anyOn) {
@@ -933,17 +938,17 @@ static void handleCmd(const char *cmd) {
     return;
   }
 
-  // NEW: $STAT,sid* — force immediate $S dump for one port (display uses on reconnect)
-  if (sscanf(cmd,"$STAT,%d",&sid)==1 && sid>=1 && sid<=4) {
-    sendFull(sid-1);
-    Serial1.printf("$ACK,STAT,%d,%s*\n",sid,ts);
-    return;
-  }
-
-  // NEW: $STAT,0* — force immediate $S dump for ALL ports
+  // $STAT,0* — force immediate $S dump for ALL ports (must be checked before $STAT,sid)
   if (strncmp(cmd,"$STAT,0",7)==0) {
     for (int i=0;i<4;i++) sendFull(i);
     Serial1.printf("$ACK,STAT,0,%s*\n",ts);
+    return;
+  }
+
+  // $STAT,sid* — force immediate $S dump for one port (display uses on reconnect)
+  if (sscanf(cmd,"$STAT,%d",&sid)==1 && sid>=1 && sid<=4) {
+    sendFull(sid-1);
+    Serial1.printf("$ACK,STAT,%d,%s*\n",sid,ts);
     return;
   }
 
@@ -969,6 +974,7 @@ static void handleCmd(const char *cmd) {
 
 // Character-by-character UART1 RX parser  (called from loop, Core 0)
 static void readDisplayUART() {
+  bool gotBytes = false;
   while (Serial1.available()) {
     char c = (char)Serial1.read();
     if (c == '*') {
@@ -981,8 +987,11 @@ static void readDisplayUART() {
     } else if (rxIdx < RX_BUF - 1) {
       rxBuf[rxIdx++] = c;
     }
-    dispConn = true;
+    gotBytes = true;
   }
+  // Update lastContact here so neoUpdate() timeout works independently
+  // of dispConn — dispConn is now derived from the 5s timeout in neoUpdate()
+  if (gotBytes) lastContact = millis();
 }
 
 // ═════════════════════════════════════════════════════════════════════════
