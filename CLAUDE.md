@@ -34,6 +34,44 @@ Each subdirectory should contain its own `README.md` explaining its purpose and 
 
 ---
 
+## AI Assistant Behavior
+
+Rules that govern how an AI assistant (e.g. Claude Code) must behave when working in this repository. These rules exist to prevent silent code loss, unintended side effects, and opaque edits.
+
+---
+
+## Code Protection Rules (MANDATORY)
+
+### Rule 1: NEVER DELETE OR OMIT CODE
+- Never remove any line of code unless explicitly asked to delete it
+- Never summarize or shorten existing code with "..." or comments like "rest remains the same"
+- When showing fixes, always include the COMPLETE function, not just the changed lines
+- If a file has 800 lines, all 800 lines must be preserved after editing
+
+### Rule 2: ALWAYS SHOW BEFORE/AFTER
+- Before making ANY change, show the exact lines that will change (BEFORE)
+- After proposing the change, show what it will look like (AFTER)
+- Wait for explicit approval before applying the change
+- Number every change so the user can approve or reject individually
+
+### Rule 3: NEVER TOUCH UNRELATED FILES
+- Only modify files specifically mentioned in the request
+- If a fix requires changes to another file, ASK FIRST — do not silently modify
+- List all files that will be affected BEFORE making any changes
+
+### Rule 4: AUTOMATIC BACKUP BEFORE EVERY EDIT
+- Before editing any .ino, .py, .html, .js, or .cpp file, create a backup copy in a backups/ folder
+- Backup naming: backups/YYYY-MM-DD_HHMMSS_originalfilename
+- Log every backup in WORKSPACE_LOG.md
+- Never delete backup files unless explicitly asked
+
+### Rule 5: PRESERVE ALL COMMENTS AND DOCUMENTATION
+- Never remove inline comments, block comments, or documentation
+- Never rewrite comments unless specifically asked to
+- Treat comments as equally important as code
+
+---
+
 ## Python
 
 ### Project Layout
